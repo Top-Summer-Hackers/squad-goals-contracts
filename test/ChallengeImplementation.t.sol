@@ -565,6 +565,10 @@ contract ChallengeImplementationTest is Test {
                     ((0.001 ether * 4000) / 10000)
         );
         require(balanceAfterAccount3 == balanceBeforeAccount3);
+
+        require(rewardNFT.balanceOf(account3) == 0);
+        require(rewardNFT.balanceOf(account4) == 1);
+        require(rewardNFT.balanceOf(account2) == 1);
     }
 
     function testAllUsersDontPass() public {
