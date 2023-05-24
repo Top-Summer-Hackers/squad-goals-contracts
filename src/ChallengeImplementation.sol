@@ -35,7 +35,7 @@ contract ChallengeImplementation {
     address creator;
     address SquadGoalsAddr;
     address rewardNFTAddr;
-    uint256 stakeAmount;
+    uint256 public stakeAmount;
     uint256 maxAmountOfStakers;
     uint256 deadline;
     uint256 public stakerCount = 0;

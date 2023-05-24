@@ -8,4 +8,6 @@ interface IChallenge {
         address _rewardNFTAddr,
         address _creator
     ) external;
+
+    function join(bytes32 _name) external payable;
 }

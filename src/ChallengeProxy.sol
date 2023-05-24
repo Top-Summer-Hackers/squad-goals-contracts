@@ -8,20 +8,24 @@ contract ChallengeProxy is Proxy {
      * This is the keccak-256 hash of "eip1967.proxy.implementation" subtracted by 1, and is
      * validated in the constructor.
      */
-    bytes32 private implementationSlot =
-        0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
+    bytes32 private constant IMPLEMENTATION_SLOT =
+        bytes32(uint(keccak256("eip1967.proxy.implementation")) - 1);
 
     constructor(address _logic) {
-        bytes32 slot = implementationSlot;
+        bytes32 slot = IMPLEMENTATION_SLOT;
         assembly {
             sstore(slot, _logic)
         }
     }
 
     function _implementation() internal view override returns (address logic) {
-        bytes32 slot = implementationSlot;
+        bytes32 slot = IMPLEMENTATION_SLOT;
         assembly {
             logic := sload(slot)
         }
+    }
+
+    function getImplementation() external view returns (address) {
+        return _implementation();
     }
 }
