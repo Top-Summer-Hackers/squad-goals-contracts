@@ -1,8 +1,8 @@
 pragma solidity 0.8.19;
 import "./IRewardNFT.sol";
-import "forge-std/console.sol";
+import "./IChallenge.sol";
 
-contract ChallengeImplementation {
+contract ChallengeImplementation is IChallenge {
     error ContractAlreadyInitialized();
     error MaxAmountOfStakersReached();
     error IncorrectAmountOfEthSent();
@@ -14,13 +14,6 @@ contract ChallengeImplementation {
     error InvalidVote();
     error TransferFailed();
     error NotEnoughStakers();
-
-    struct Staker {
-        address stakerAddr;
-        bytes32 stakerName;
-        uint256 upVotes;
-        uint256 downVotes;
-    }
 
     struct Vote {
         address stakerAddr;
@@ -36,8 +29,8 @@ contract ChallengeImplementation {
     address SquadGoalsAddr;
     address rewardNFTAddr;
     uint256 public stakeAmount;
-    uint256 maxAmountOfStakers;
-    uint256 deadline;
+    uint256 public maxAmountOfStakers;
+    uint256 public deadline;
     uint256 public stakerCount = 0;
     uint256 public votedCount;
 
@@ -46,6 +39,7 @@ contract ChallengeImplementation {
     mapping(address => bool) public hasVoted;
     mapping(address => mapping(address => bool)) public hasVotedFor;
     bool private initialized;
+    bool public completed;
 
     function initialize(
         uint256 _stakeAmount,
@@ -64,7 +58,12 @@ contract ChallengeImplementation {
         creator = _creator;
     }
 
-    function join(bytes32 _name) external payable {
+    modifier whenNotCompleted() {
+        require(!completed, "Challenge : Already completed");
+        _;
+    }
+
+    function join(bytes32 _name) external payable whenNotCompleted {
         if (block.timestamp > deadline) revert DeadlineHasPassed(true);
         if (stakerCount == maxAmountOfStakers)
             revert MaxAmountOfStakersReached();
@@ -77,7 +76,7 @@ contract ChallengeImplementation {
         stakerCount++;
     }
 
-    function submitVote(Vote[] calldata _votes) external {
+    function submitVote(Vote[] calldata _votes) external whenNotCompleted {
         if (stakers[msg.sender].stakerAddr == address(0)) {
             revert HasJoined(false);
         }
@@ -85,9 +84,7 @@ contract ChallengeImplementation {
             revert NotEnoughStakers();
         }
         if (hasVoted[msg.sender]) revert AlreadyVoted();
-        if (block.timestamp < deadline) revert DeadlineHasPassed(false);
-        if (block.timestamp > deadline + COOLDOWN_PERIOD)
-            revert NoInCoolDownPeriod();
+        if (!onVoting()) revert NoInCoolDownPeriod();
         if (_votes.length != stakerCount - 1) revert IncorrectAmountOfVotes();
         for (uint256 i; i < _votes.length; ++i) {
             _checkAndVote(_votes[i]);
@@ -111,7 +108,10 @@ contract ChallengeImplementation {
         hasVoted[msg.sender] = true;
     }
 
-    function executePayouts() external {
+    function executePayouts() external whenNotCompleted {
+        if (block.timestamp < deadline + COOLDOWN_PERIOD) {
+            revert DeadlineHasPassed(false);
+        }
         if (stakerCount == 0) {
             revert NotEnoughStakers();
         }
@@ -119,21 +119,18 @@ contract ChallengeImplementation {
             stakerIds[0].call{value: address(this).balance}("");
             return;
         }
-        if (block.timestamp < deadline + COOLDOWN_PERIOD) {
-            revert DeadlineHasPassed(false);
-        }
         if (votedCount < (stakerCount + 1) / 2) {
             _executePayback();
         } else {
             _executePayout();
         }
+        completed = true;
     }
 
     function _executePayout() internal {
         uint256 _stakeAmount = stakeAmount;
         uint256 _protocolFee = (_stakeAmount * PROTOCOL_FEE) / 10000;
         uint256 _creatorFee = (_stakeAmount * CREATOR_FEE) / 10000;
-        uint256 _stakerFee = (_stakeAmount * STAKER_FEE) / 10000;
         _stakeAmount -= (_protocolFee + _creatorFee);
 
         uint256 nonPassingStakers;
@@ -207,5 +204,10 @@ contract ChallengeImplementation {
             _stakers[i] = stakers[stakerIds[i]];
         }
         return _stakers;
+    }
+
+    function onVoting() public view returns (bool) {
+        return (block.timestamp > deadline &&
+            block.timestamp < deadline + COOLDOWN_PERIOD);
     }
 }

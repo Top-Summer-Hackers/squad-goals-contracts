@@ -40,7 +40,7 @@ contract ChallengeImplementationTest is Test {
             address(rewardNFT),
             creator
         );
-        rewardNFT.transferOwnership(address(challengeImplementation));
+        rewardNFT.setAuthorizedMinter(address(challengeImplementation));
     }
 
     function testCannotInitializeAgain() public {
@@ -169,9 +169,7 @@ contract ChallengeImplementationTest is Test {
         vm.prank(account3);
         challengeImplementation.join{value: 0.001 ether}("account3");
 
-        vm.expectRevert(
-            abi.encodeWithSignature("DeadlineHasPassed(bool)", false)
-        );
+        vm.expectRevert(abi.encodeWithSignature("NoInCoolDownPeriod()"));
         ChallengeImplementation.Vote[]
             memory votes = new ChallengeImplementation.Vote[](1);
         votes[0] = ChallengeImplementation.Vote(account2, true);

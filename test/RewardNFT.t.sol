@@ -15,11 +15,12 @@ contract RewardNFTTest is Test {
 
     function testMintOnlyOwner() public {
         vm.prank(account2);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert("RewardNFT : Not authorized minter");
         rewardNFT.mint(account1);
     }
 
     function testTranferDoesntWork() public {
+        rewardNFT.setAuthorizedMinter(address(this));
         rewardNFT.mint(account1);
         vm.prank(account1);
         rewardNFT.approve((address(this)), 1);
