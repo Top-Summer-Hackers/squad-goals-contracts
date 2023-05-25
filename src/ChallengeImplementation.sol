@@ -28,18 +28,18 @@ contract ChallengeImplementation is IChallenge {
     address creator;
     address SquadGoalsAddr;
     address rewardNFTAddr;
-    uint256 public stakeAmount;
-    uint256 public maxAmountOfStakers;
-    uint256 public deadline;
-    uint256 public stakerCount = 0;
-    uint256 public votedCount;
+    uint256 public override stakeAmount;
+    uint256 public override maxAmountOfStakers;
+    uint256 public override deadline;
+    uint256 public override stakerCount = 0;
+    uint256 public override votedCount;
 
     mapping(address => Staker) stakers;
     mapping(uint256 => address) stakerIds;
     mapping(address => bool) public hasVoted;
     mapping(address => mapping(address => bool)) public hasVotedFor;
     bool private initialized;
-    bool public completed;
+    bool public override completed;
 
     function initialize(
         uint256 _stakeAmount,
@@ -63,7 +63,7 @@ contract ChallengeImplementation is IChallenge {
         _;
     }
 
-    function join(bytes32 _name) external payable whenNotCompleted {
+    function join(bytes32 _name) external payable override whenNotCompleted {
         if (block.timestamp > deadline) revert DeadlineHasPassed(true);
         if (stakerCount == maxAmountOfStakers)
             revert MaxAmountOfStakersReached();
@@ -198,7 +198,7 @@ contract ChallengeImplementation is IChallenge {
         return stakers[_stakerAddr];
     }
 
-    function getStakers() external view returns (Staker[] memory) {
+    function getStakers() external view override returns (Staker[] memory) {
         Staker[] memory _stakers = new Staker[](stakerCount);
         for (uint256 i; i < stakerCount; ++i) {
             _stakers[i] = stakers[stakerIds[i]];
@@ -206,7 +206,7 @@ contract ChallengeImplementation is IChallenge {
         return _stakers;
     }
 
-    function onVoting() public view returns (bool) {
+    function onVoting() public view virtual returns (bool) {
         return (block.timestamp > deadline &&
             block.timestamp < deadline + COOLDOWN_PERIOD);
     }
