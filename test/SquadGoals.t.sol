@@ -37,10 +37,10 @@ contract SquadGoalsTest is Test {
         return (challenge, nft);
     }
 
-    function createChallengeMock(uint256 id) public returns (address, address) {
+    function createChallengeCopy(uint256 id) public returns (address, address) {
         vm.prank(account1);
-        squat.createChallengeMock(id);
-        (address challenge, address nft) = squat.getChallengeMock(1);
+        squat.createChallengeCopy(id);
+        (address challenge, address nft) = squat.getChallengeCopy(1);
         require(
             ChallengeProxy(payable(challenge)).getImplementation() ==
                 address(challengeImplementation)
@@ -156,9 +156,9 @@ contract SquadGoalsTest is Test {
         squat.withdraw();
     }
 
-    function testImplementationAsProxyForMock() public {
+    function testImplementationAsProxyForCopy() public {
         (address challenge, address nftAddr) = createChallenge();
-        (challenge, nftAddr) = createChallengeMock(1);
+        (challenge, nftAddr) = createChallengeCopy(1);
 
         rewardNFT = RewardNFT(nftAddr);
         challengeImplementation = ChallengeImplementation(challenge);
@@ -266,13 +266,13 @@ contract SquadGoalsTest is Test {
         _checkForCorrectData();
     }
 
-    function testCreateChallengeMock() public {
+    function testCreateChallengeCopy() public {
         (address challenge, address nftAddr) = createChallenge();
 
         vm.expectRevert(abi.encodeWithSignature("ChallengeDoesntExist()"));
-        squat.createChallengeMock(2);
+        squat.createChallengeCopy(2);
 
-        (challenge, nftAddr) = createChallengeMock(1);
+        (challenge, nftAddr) = createChallengeCopy(1);
 
         rewardNFT = RewardNFT(nftAddr);
         challengeImplementation = ChallengeImplementation(challenge);
@@ -288,44 +288,53 @@ contract SquadGoalsTest is Test {
         require(challengeImplementation.onVoting() == false);
     }
 
-    function _checkForCorrectData() internal {
-        SquadGoals.ChallengeReturnData[] memory data = squat.getAllChallenges();
-        require(data.length == 2);
-        require(data[1].challenge == address(challengeImplementation));
-        require(data[1].NFT == address(rewardNFT));
-        require(data[1].stakeAmount == 0.001 ether);
-        require(data[1].maxAmountOfStakers == 7);
-        require(data[1].stakerCount == 3);
-        require(data[1].stakers.length == 3);
-        require(data[1].votedCount == 2);
-        require(data[1].completed == true);
-        require(data[1].onVoting == false);
-        require(data[1].stakers[0].stakerAddr == account2);
-        require(data[1].stakers[0].stakerName == "account2");
-        require(data[1].stakers[0].upVotes == 2);
-        require(data[1].stakers[0].downVotes == 0);
-        require(data[1].stakers[1].stakerAddr == account3);
-        require(data[1].stakers[1].stakerName == "account3");
-        require(data[1].stakers[1].upVotes == 0);
-        require(data[1].stakers[1].downVotes == 1);
-        require(data[1].stakers[2].stakerAddr == account4);
-        require(data[1].stakers[2].stakerName == "account4");
-        require(data[1].stakers[2].upVotes == 1);
-        require(data[1].stakers[2].downVotes == 0);
+    function _checkForCorrectData() internal view {
+        (
+            SquadGoals.ChallengeReturnData[] memory challenges,
+            SquadGoals.ChallengeReturnData[] memory challengeCopies
+        ) = squat.getAllChallenges();
+        require(challengeCopies.length == 1);
+        require(
+            challengeCopies[0].challenge == address(challengeImplementation)
+        );
+        require(challengeCopies[0].NFT == address(rewardNFT));
+        require(challengeCopies[0].stakeAmount == 0.001 ether);
+        require(challengeCopies[0].maxAmountOfStakers == 7);
+        require(challengeCopies[0].stakerCount == 3);
+        require(challengeCopies[0].stakers.length == 3);
+        require(challengeCopies[0].votedCount == 2);
+        require(challengeCopies[0].completed == true);
+        require(challengeCopies[0].onVoting == false);
+        require(challengeCopies[0].stakers[0].stakerAddr == account2);
+        require(challengeCopies[0].stakers[0].stakerName == "account2");
+        require(challengeCopies[0].stakers[0].upVotes == 2);
+        require(challengeCopies[0].stakers[0].downVotes == 0);
+        require(challengeCopies[0].stakers[1].stakerAddr == account3);
+        require(challengeCopies[0].stakers[1].stakerName == "account3");
+        require(challengeCopies[0].stakers[1].upVotes == 0);
+        require(challengeCopies[0].stakers[1].downVotes == 1);
+        require(challengeCopies[0].stakers[2].stakerAddr == account4);
+        require(challengeCopies[0].stakers[2].stakerName == "account4");
+        require(challengeCopies[0].stakers[2].upVotes == 1);
+        require(challengeCopies[0].stakers[2].downVotes == 0);
 
         (address challenge1, address nftAddr1) = squat.getChallenge(1);
 
-        require(data[0].challenge == challenge1);
-        require(data[0].NFT == nftAddr1);
-        require(data[0].stakeAmount == 0.001 ether);
-        require(data[0].maxAmountOfStakers == 7);
-        require(data[0].stakerCount == 0);
-        require(data[0].stakers.length == 0);
-        require(data[0].votedCount == 0);
-        require(data[0].completed == false);
-        require(data[0].onVoting == false);
+        require(challenges[0].challenge == challenge1);
+        require(challenges[0].NFT == nftAddr1);
+        require(challenges[0].stakeAmount == 0.001 ether);
+        require(challenges[0].maxAmountOfStakers == 7);
+        require(challenges[0].stakerCount == 0);
+        require(challenges[0].stakers.length == 0);
+        require(challenges[0].votedCount == 0);
+        require(challenges[0].completed == false);
+        require(challenges[0].onVoting == false);
 
-        // USER CLAIMED NFTs
+        address[] memory copies = squat.getCopiesOfChallenge(1);
+        require(copies.length == 1);
+        require(copies[0] == challengeCopies[0].challenge);
+
+        // // USER CLAIMED NFTs
 
         SquadGoals.UserClaimedNFT[] memory claimedNFTs = squat
             .getUserClaimedNFTs(account2);
@@ -343,5 +352,18 @@ contract SquadGoalsTest is Test {
         require(claimedNFTs[0].NFT == address(rewardNFT));
         require(claimedNFTs[0].tokenIds.length == 1);
         require(claimedNFTs[0].tokenIds[0] == 2);
+
+        console.logUint(30 days);
+
+        // TEST UNIQUE GETTERS
+        challenges = squat.getChallenges();
+        require(challenges.length == 1);
+        require(challenges[0].challenge == challenge1);
+
+        challengeCopies = squat.getChallengeCopies();
+        require(challengeCopies.length == 1);
+        require(
+            challengeCopies[0].challenge == address(challengeImplementation)
+        );
     }
 }
