@@ -6,6 +6,10 @@ import "./ChallengeImplementation.sol";
 import "./IChallenge.sol";
 import "./RewardNFT.sol";
 
+/**
+ * @title SquadGoals
+ * @author Carlos Ramos
+ */
 contract SquadGoals {
     error NotEnoughBalance();
     error TransferFailed();
@@ -49,6 +53,17 @@ contract SquadGoals {
         challengeImplementation = _challengeImplementation;
     }
 
+    /**
+     *
+     * @param _stakeAmount The amount of ETH to stake
+     * @param _maxAmountOfStakers The maximum amount of stakers
+     * @param _duration The duration of the Challenge
+     * @param _name The name of the RewardNFT
+     * @param _symbol The symbol of the RewardNFT
+     * @param _uri The uri of the RewardNFT
+     * @dev This function deploys a new proxy and assigns the basic implementation of Challenge
+     * @dev this function will deploy a new RewardNFT and assign it to the Challenge
+     */
     function createChallenge(
         uint256 _stakeAmount,
         uint256 _maxAmountOfStakers,
@@ -80,6 +95,10 @@ contract SquadGoals {
         emit ChallengeCreated(address(proxy));
     }
 
+    /**
+     *
+     * @param _challengeId the id of the challenge to copy
+     */
     function createChallengeCopy(uint256 _challengeId) external {
         bytes memory initData = challengeInitData[_challengeId];
 

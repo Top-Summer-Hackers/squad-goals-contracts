@@ -2,6 +2,11 @@ pragma solidity ^0.8.19;
 
 import "openzeppelin-contracts/contracts/proxy/Proxy.sol";
 
+/**
+ * @title ChallengeProxy
+ * @author Carlos Ramos
+ * @notice A simple proxy contract to be used for the Challenge contract
+ */
 contract ChallengeProxy is Proxy {
     /**
      * @dev Storage slot with the address of the current implementation.
@@ -11,6 +16,9 @@ contract ChallengeProxy is Proxy {
     bytes32 private constant IMPLEMENTATION_SLOT =
         bytes32(uint(keccak256("eip1967.proxy.implementation")) - 1);
 
+    /**
+     * @param _logic The address of the initial implementation.
+     */
     constructor(address _logic) {
         bytes32 slot = IMPLEMENTATION_SLOT;
         assembly {

@@ -2,6 +2,11 @@ pragma solidity 0.8.19;
 import "./IRewardNFT.sol";
 import "./IChallenge.sol";
 
+/**
+ * @title ChallengeImplementation
+ * @notice The implementation contract for a Challenge
+ * @author Carlos Ramos
+ */
 contract ChallengeImplementation is IChallenge {
     error ContractAlreadyInitialized();
     error MaxAmountOfStakersReached();
@@ -41,6 +46,15 @@ contract ChallengeImplementation is IChallenge {
     bool private initialized;
     bool public override completed;
 
+    /**
+     * @notice Initializes the Challenge
+     * @param _stakeAmount The amount of ETH to stake
+     * @param _maxAmountOfStakers The maximum amount of stakers
+     * @param _duration The duration of the Challenge
+     * @param _rewardNFTAddr The address of the RewardNFT
+     * @param _creator The address of the creator of the Challenge
+     * @dev This function can only be called once
+     */
     function initialize(
         uint256 _stakeAmount,
         uint256 _maxAmountOfStakers,
@@ -76,6 +90,11 @@ contract ChallengeImplementation is IChallenge {
         stakerCount++;
     }
 
+    /**
+     * @notice Allows a staker to vote on the Challenge
+     * @param _votes The votes to be submitted
+     * the length is stakerCount - 1, the address of msg.sender shouldnt be included
+     */
     function submitVote(Vote[] calldata _votes) external whenNotCompleted {
         if (stakers[msg.sender].stakerAddr == address(0)) {
             revert HasJoined(false);
